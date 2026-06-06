@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/SolutionItems/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/AvatarChat.Abstractions/AvatarChat.Abstractions.csproj" />
+    <Project Path="src/AvatarChat.Core/AvatarChat.Core.csproj" />
+    <Project Path="src/AvatarChat.Host/AvatarChat.Host.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AvatarChat.Abstractions.Tests/AvatarChat.Abstractions.Tests.csproj" />
+  </Folder>
+</Solution>
