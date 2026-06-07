@@ -1,4 +1,12 @@
+using System.ClientModel;
+using AvatarChat.Abstractions;
+using AvatarChat.Core.Agents;
+using AvatarChat.Core.Services;
+using AvatarChat.Host.Options;
 using JetBrains.Annotations;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
+using OpenAI;
 
 namespace AvatarChat.Host;
 
@@ -9,15 +17,38 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-        builder.Services.AddAuthorization();
+        builder.Services.AddSingleton<ISpeechToTextService, SpeechToTextService>();
+        builder.Services.AddSingleton<ITextToSpeechService, TextToSpeechService>();
 
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
+        builder.Services.Configure<AvatarBackendOptions>(builder.Configuration.GetSection("AvatarBackend"));
+        builder.Services.AddHttpClient<IAvatarInferenceService, PythonAvatarInferenceService>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<AvatarBackendOptions>>().Value;
+            
+            client.BaseAddress = new Uri(options.Url);
+            client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+        });
+
+        builder.Services.Configure<ChatClientOptions>(builder.Configuration.GetSection("ChatClient"));
+        builder.Services.AddSingleton<IChatClient>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<ChatClientOptions>>().Value;
+
+            var credential = new ApiKeyCredential(options.ApiKey);
+            var openAiClient = new OpenAIClient(credential, new OpenAIClientOptions
+            {
+                Endpoint = new Uri(options.Endpoint)
+            }).GetChatClient(options.Model);
+
+            return openAiClient.AsIChatClient();
+        });
+
+        builder.Services.AddSingleton<DigitalHumanAgent>();
+
+        builder.Services.AddControllers();
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
@@ -26,25 +57,6 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-
-        var summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
-        app.MapGet("/weatherforecast", (HttpContext _) =>
-            {
-                var forecast = Enumerable.Range(1, 5).Select(index =>
-                        new WeatherForecast
-                        {
-                            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                            TemperatureC = Random.Shared.Next(-20, 55),
-                            Summary = summaries[Random.Shared.Next(summaries.Length)]
-                        })
-                    .ToArray();
-                return forecast;
-            })
-            .WithName("GetWeatherForecast");
 
         app.Run();
     }

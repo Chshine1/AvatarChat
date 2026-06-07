@@ -9,6 +9,14 @@
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.6.0" />
+        <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.6.0" />
+        <PackageReference Include="OpenAI" Version="2.11.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AvatarChat.Abstractions\AvatarChat.Abstractions.csproj" />
+      <ProjectReference Include="..\AvatarChat.Core\AvatarChat.Core.csproj" />
     </ItemGroup>
 
 </Project>
